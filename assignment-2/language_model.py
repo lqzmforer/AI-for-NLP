@@ -63,6 +63,7 @@ def get_all_files(dataset_path):
 
 
 def get_corpus(dataset_path, debug='no'):
+    """get valdid corpus from specified dataset path"""
     assert os.path.isdir(dataset_path), 'invalid dataset path.'
     all_files = get_all_files(dataset_path)
     corpus = []
@@ -90,6 +91,7 @@ def product(nums):
 
 
 def get_prob(token, token_cnt):
+    """get prob of one word"""
     cnt_sum = sum(token_cnt.values())
     eps = 1 / cnt_sum
     if token in token_cnt:
@@ -99,27 +101,31 @@ def get_prob(token, token_cnt):
 
 
 def unigram_lm(string, corpus):
+    """unigram model"""
     token_cnt = Counter(corpus)
     return product(get_prob(t, token_cnt) for t in jieba.cut(string))
 
 
 def get_combination_prob(w1, w2, _2_gram_counter, _2_gram_sum):
+    """get combination prob of a pair of (w1, w2)"""
     if w1 + w2 in _2_gram_counter: return _2_gram_counter[w1+w2] / _2_gram_sum
     else:
         return 1 / _2_gram_sum
 
 
 def get_prob_2_gram(w1, w2, token_cnt, _2_gram_counter, _2_gram_sum):
+    """get conditional prob"""
     return get_combination_prob(w1, w2, _2_gram_counter, _2_gram_sum) / get_prob(w1, token_cnt)
 
 
-def two_gram_lm(string, corpus):
+def bigram_lm(string, corpus):
+    """Bigram model"""
     token_cnt = Counter(corpus)
     all_2_grams_words = [''.join(corpus[i:i + 2]) for i in range(len(corpus[:-2]))]
     _2_gram_sum = len(all_2_grams_words)
     _2_gram_counter = Counter(all_2_grams_words)
 
-    words = jieba.cut(string)
+    words = list(jieba.cut(string))
 
     sentence_probability = 1
     for i, word in enumerate(words):
@@ -139,9 +145,11 @@ if __name__ == '__main__':
     print(f'it took {t2 - t1:.2f}s to get corpus. ', end='')
     print('length of corpus is:',len(corpus))
 
-    s1 = "数学蕴含无穷力量"
-    s2 = "我喜欢数学"
-
-    prob2 = unigram_lm(s2, corpus)
-    print('prob of s1:', prob2)
+    sentences = ["数学蕴含无穷力量",
+                 "我喜欢数学"]
+    print('sentence', '\t', 'prob-unigram', '\t', 'prob-bigram')
+    for sen in sentences:
+        prob1 = unigram_lm(sen, corpus)
+        prob2 = bigram_lm(sen,corpus)
+        print(sen, '\t', prob1, '\t', prob2)
 
